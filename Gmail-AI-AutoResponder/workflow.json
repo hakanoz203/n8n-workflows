@@ -1,0 +1,321 @@
+{
+  "name": "Gmail AI auto-responder: create draft replies to incoming emails",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {
+          "q": "-from:me"
+        },
+        "options": {}
+      },
+      "id": "b19638dd-889a-4f70-b782-2a6405f1fe30",
+      "name": "Gmail Trigger",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "position": [
+        -800,
+        112
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "53849246-ad32-4845-9976-9f9688f5a6f2",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              },
+              "leftValue": "={{ $json.needsReply }}",
+              "rightValue": "true"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "95737401-f5eb-40f4-9b84-2f2a2d6291a7",
+      "name": "If Needs Reply",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        -224,
+        112
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"needsReply\": {\n      \"type\": \"boolean\"\n      }\n  },\n  \"required\": [\"needsReply\"]\n}\n"
+      },
+      "id": "92899463-5c67-4da1-8a96-e5c0d0c9319f",
+      "name": "JSON Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "position": [
+        -368,
+        272
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o",
+        "options": {
+          "responseFormat": "json_object",
+          "temperature": 0
+        }
+      },
+      "id": "632c7a9f-55a0-4d3c-908c-0e824ad2c2f4",
+      "name": "OpenAI Chat",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "position": [
+        -560,
+        272
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Email Geldiğinde Trigger\n",
+        "height": 394.42512272977456,
+        "width": 304.10628068244364
+      },
+      "id": "ce177dbf-5784-4f9b-ad20-868970373fc4",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -896,
+        16
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## cevap gerektirip gerektirmediğini belirle",
+        "height": 397,
+        "width": 556
+      },
+      "id": "cf98349d-0130-468d-b03c-5d3ab242c9e7",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -576,
+        16
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Cevabı Üret",
+        "height": 400.08454375343996,
+        "width": 333.19082443588354
+      },
+      "id": "c9bf3853-1aba-448d-b9d3-bca83a40c294",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        0
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Sohbet içinde Taslak Olarak bırak(son insan onayı için)",
+        "height": 427,
+        "width": 326
+      },
+      "id": "eb3a3e39-891a-4525-9822-93f681a3fe03",
+      "name": "Sticky Note3",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        352,
+        -16
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "model": "gpt-4-turbo",
+        "options": {}
+      },
+      "id": "94d6c26e-da98-4b9b-bc46-6fdcc9fc56db",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "position": [
+        32,
+        224
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "resource": "draft",
+        "subject": "=Re: {{ $('Gmail Trigger').item.json.headers.subject }}",
+        "emailType": "html",
+        "message": "={{ $json.text.replace(/\\n/g, \"<br />\\n\") }}",
+        "options": {
+          "threadId": "={{ $('Gmail Trigger').item.json.threadId }}",
+          "sendTo": "={{ $('Gmail Trigger').item.json.headers.from }}"
+        }
+      },
+      "id": "6d1f027d-8a26-47bb-a24b-118187357d6c",
+      "name": "Gmail - Create Draft",
+      "type": "n8n-nodes-base.gmail",
+      "position": [
+        448,
+        112
+      ],
+      "typeVersion": 2.1,
+      "webhookId": "752ef6ed-274b-4a5d-be0c-61c3f9214a74"
+    },
+    {
+      "parameters": {
+        "prompt": "=Subject: {{ $json.subject }}\nMessage:\n{{ $json.textAsHtml }} ",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "Sen benim adıma gelen e-postalara cevap taslağı hazırlayan yardımcı bir asistansın. Sana bir e-posta metni verdiğimde, sadece onun için uygun bir cevap taslağı üret ve başka hiçbir şey yazma.  Cevapların profesyonel e-posta ortamına uygun, net, düzenli ve detaylı olmalı. Uydurma bilgi ekleme.  Detaylı kurallar:  * Kısa ve öz ol, business casual bir ton kullan. * “Merhaba,” ile başla ve “İyi Günler,” ile bitir. * Evet-hayır sorularına cevap verirken 2 farklı yanıt hazırla: biri olumlu, diğeri olumsuz olacak şekilde ve aralarına “ - - - - - - - OR - - - - - - - ” koy. * Cevabı bilmiyorsan “[YOUR_ANSWER_HERE]” gibi boşluklar bırakabilirsin. * Hiçbir özel formatlama kullanma, sadece düz metin yaz. * Gelen e-postanın dili neyse aynı dilde cevap ver."
+            }
+          ]
+        }
+      },
+      "id": "808da277-2028-4f75-9174-e59b4214a19a",
+      "name": "Assess if message needs a reply",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "position": [
+        -560,
+        112
+      ],
+      "typeVersion": 1.3
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Subject: {{ $('Gmail Trigger').item.json.subject }}\nMessage: {{ $('Gmail Trigger').item.json.textAsHtml }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You're a helpful personal assistant and your task is to draft replies on my behalf to my incoming emails. Whenever I provide some text from an email, return an appropriate draft reply for it and nothing else.\nEnsure that the reply is suitable for a professional email setting and addresses the topic in a clear, structured, and detailed manner.\nDo not make things up.\n\nDetailed instructions:\n- Be concise and maintain a business casual tone.\n- Start with \"Hello,\", and end with \"Best,\"\n- When replying to yes-no questions, draft 2 responses: one affirmative and one negative separated by \" - - - - - - - OR - - - - - - - \"\n- If you don't know an answer, you can leave placeholders like \"[YOUR_ANSWER_HERE]\".\n- Don't use any special formatting, only plain text.\n- Reply in the same language as the inbound email."
+            }
+          ]
+        }
+      },
+      "id": "f7b25ef0-3cc8-48eb-82e1-19263838a32b",
+      "name": "Generate email reply",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "position": [
+        48,
+        64
+      ],
+      "typeVersion": 1.4
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "JSON Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Assess if message needs a reply",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Assess if message needs a reply",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Assess if message needs a reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Needs Reply": {
+      "main": [
+        [
+          {
+            "node": "Generate email reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Generate email reply",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate email reply": {
+      "main": [
+        [
+          {
+            "node": "Gmail - Create Draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Assess if message needs a reply": {
+      "main": [
+        [
+          {
+            "node": "If Needs Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "757d7816-56ac-42a8-b2a6-33b59aadfc50",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "bcb72e030ac62626a86fecc8ea70883c5536a33a29144b86de732ea83ce76ccf"
+  },
+  "id": "ODU9YgmdmT26TCXYF5DAK",
+  "tags": []
+}
